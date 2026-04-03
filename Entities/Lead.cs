@@ -1,31 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace crm.Entities;
 
-namespace crm.Entities;
-
-public partial class Lead
+public class Lead
 {
-    public int LeadId { get; set; }
-
-    public int? CompanyId { get; set; }
-
-    public int? ContactId { get; set; }
-
+    public int LeadID { get; set; }
+    public int CompanyID { get; set; }
+    public int? ContactID { get; set; }
     public string? Source { get; set; }
+    public string Status { get; set; } = "New";
+    public int CreatedByUserID { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public bool Deleted { get; set; } = false;
 
-    public string Status { get; set; } = null!;
-
-    public int? CreatedByUserId { get; set; }
-
-    public DateTime? CreatedAt { get; set; }
-
-    public DateTime? LastModified { get; set; }
-
-    public bool? Deleted { get; set; }
-
-    public virtual Company? Company { get; set; }
-
-    public virtual Contact? Contact { get; set; }
-
-    public virtual User? CreatedByUser { get; set; }
+    public Company Company { get; set; } = null!;
+    public Contact? Contact { get; set; }
+    public User CreatedByUser { get; set; } = null!;
 }

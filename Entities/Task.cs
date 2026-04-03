@@ -1,33 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace crm.Entities;
 
-namespace crm.Entities;
-
-public partial class Task
+public class Task
 {
-    public int TaskId { get; set; }
-
+    public int TaskID { get; set; }
     public string Subject { get; set; } = null!;
-
     public string? Description { get; set; }
-
     public DateTime? DueDate { get; set; }
-
-    public bool? IsCompleted { get; set; }
-
+    public bool IsCompleted { get; set; } = false;
     public DateTime? CompletedDate { get; set; }
-
-    public int RelatedRecordId { get; set; }
-
+    public int RelatedRecordID { get; set; }
     public string RelatedRecordType { get; set; } = null!;
+    public int? AssignedToUserID { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public bool Deleted { get; set; } = false;
 
-    public int? AssignedToUserId { get; set; }
-
-    public DateTime? CreatedAt { get; set; }
-
-    public DateTime? LastModified { get; set; }
-
-    public bool? Deleted { get; set; }
-
-    public virtual User? AssignedToUser { get; set; }
+    public User? AssignedToUser { get; set; }
 }

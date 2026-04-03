@@ -1,37 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace crm.Entities;
 
-namespace crm.Entities;
-
-public partial class Opportunity
+public class Opportunity
 {
-    public int OpportunityId { get; set; }
-
-    public int? CompanyId { get; set; }
-
-    public int? ContactId { get; set; }
-
+    public int OpportunityID { get; set; }
+    public int CompanyID { get; set; }
+    public int? ContactID { get; set; }
     public string Name { get; set; } = null!;
-
     public decimal? Value { get; set; }
-
-    public string Stage { get; set; } = null!;
-
+    public string Stage { get; set; } = "Discovery";
     public DateTime? CloseDate { get; set; }
+    public string Status { get; set; } = "Open";
+    public int CreatedByUserID { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public bool Deleted { get; set; } = false;
 
-    public string Status { get; set; } = null!;
-
-    public int? CreatedByUserId { get; set; }
-
-    public DateTime? CreatedAt { get; set; }
-
-    public DateTime? LastModified { get; set; }
-
-    public bool? Deleted { get; set; }
-
-    public virtual Company? Company { get; set; }
-
-    public virtual Contact? Contact { get; set; }
-
-    public virtual User? CreatedByUser { get; set; }
+    public Company Company { get; set; } = null!;
+    public Contact? Contact { get; set; }
+    public User CreatedByUser { get; set; } = null!;
 }

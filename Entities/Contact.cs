@@ -1,31 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace crm.Entities;
 
-namespace crm.Entities;
-
-public partial class Contact
+public class Contact
 {
-    public int ContactId { get; set; }
-
-    public int? CompanyId { get; set; }
-
+    public int ContactID { get; set; }
+    public int CompanyID { get; set; }
     public string Name { get; set; } = null!;
-
     public string? Email { get; set; }
-
     public string? Phone { get; set; }
-
     public string? Position { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public bool Deleted { get; set; } = false;
 
-    public DateTime? CreatedAt { get; set; }
-
-    public DateTime? LastModified { get; set; }
-
-    public bool? Deleted { get; set; }
-
-    public virtual Company? Company { get; set; }
-
-    public virtual ICollection<Lead> Leads { get; set; } = new List<Lead>();
-
-    public virtual ICollection<Opportunity> Opportunities { get; set; } = new List<Opportunity>();
+    public Company Company { get; set; } = null!;
+    public ICollection<Lead> Leads { get; set; } = new List<Lead>();
+    public ICollection<Opportunity> Opportunities { get; set; } = new List<Opportunity>();
 }

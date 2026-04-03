@@ -1,25 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace crm.Entities;
 
-namespace crm.Entities;
-
-public partial class Note
+public class Note
 {
-    public int NoteId { get; set; }
-
-    public int RelatedRecordId { get; set; }
-
+    public int NoteID { get; set; }
+    public int RelatedRecordID { get; set; }
     public string RelatedRecordType { get; set; } = null!;
-
-    public int? UserId { get; set; }
-
+    public int UserID { get; set; }
     public string NoteText { get; set; } = null!;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastModified { get; set; } = DateTime.UtcNow;
+    public bool Deleted { get; set; } = false;
 
-    public DateTime? CreatedAt { get; set; }
-
-    public DateTime? LastModified { get; set; }
-
-    public bool? Deleted { get; set; }
-
-    public virtual User? User { get; set; }
+    public User User { get; set; } = null!;
 }

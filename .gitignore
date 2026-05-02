@@ -1,5 +1,13 @@
+# Frontend
 node_modules
 dist
 .env
 .env.local
 .vite
+
+# Backend build folders
+backend/bin/
+backend/obj/
+backend/crm.db
+backend/crm.db-shm
+backend/crm.db-wal

@@ -2,40 +2,43 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Truck, Eye, EyeOff, AlertCircle } from 'lucide-react'
-import { login } from '../../api/auth.api'
-import { useAuthStore } from '../../store/authStore'
+import { register as registerUser } from '../../api/auth.api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 
 interface FormData {
-  emailOrUsername: string
+  username: string
+  email: string
   password: string
+  confirmPassword: string
 }
 
-const LoginPage: React.FC = () => {
+const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
-  const authLogin = useAuthStore(s => s.login)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: {
-      emailOrUsername: '',
+      username: '',
+      email: '',
       password: '',
+      confirmPassword: '',
     }
   })
 
   const onSubmit = async (data: FormData) => {
     try {
       setError('')
-      const res = await login({
-        emailOrUsername: data.emailOrUsername,
+      await registerUser({
+        username: data.username,
+        email: data.email,
         password: data.password,
+        role: 'User',
       })
-      authLogin(res.data)
-      navigate('/app')
+      navigate('/login')
     } catch {
-      setError('Invalid credentials. Please try again.')
+      setError('Registration failed. Please try again.')
     }
   }
 
@@ -47,8 +50,8 @@ const LoginPage: React.FC = () => {
             <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-amber-200">
               <Truck size={28} className="text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-            <p className="text-sm text-gray-500 mt-1">Sign in to your HeavyTrack account</p>
+            <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
+            <p className="text-sm text-gray-500 mt-1">Join HeavyTrack CRM today</p>
           </div>
 
           {error && (
@@ -60,10 +63,17 @@ const LoginPage: React.FC = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
-              label="Email or Username"
-              placeholder="admin@crm.com"
-              error={errors.emailOrUsername?.message}
-              {...register('emailOrUsername', { required: 'Required' })}
+              label="Username"
+              placeholder="johndoe"
+              error={errors.username?.message}
+              {...register('username', { required: 'Required' })}
+            />
+
+            <Input
+              label="Email"
+              placeholder="john@example.com"
+              error={errors.email?.message}
+              {...register('email', { required: 'Required' })}
             />
 
             <div className="w-full">
@@ -79,7 +89,7 @@ const LoginPage: React.FC = () => {
                       ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                       : 'border-gray-300 focus:border-amber-500 focus:ring-amber-500'
                   }`}
-                  {...register('password', { required: 'Required' })}
+                  {...register('password', { required: 'Required', minLength: { value: 6, message: 'Min 6 characters' } })}
                 />
                 <button
                   type="button"
@@ -94,26 +104,31 @@ const LoginPage: React.FC = () => {
               )}
             </div>
 
+            <Input
+              label="Confirm Password"
+              type="password"
+              placeholder="••••••••"
+              error={errors.confirmPassword?.message}
+              {...register('confirmPassword', {
+                required: 'Required',
+                validate: val => val === watch('password') || 'Passwords do not match'
+              })}
+            />
+
             <Button
               type="submit"
               className="w-full justify-center py-3"
               loading={isSubmitting}
             >
-              Sign in
+              Create account
             </Button>
           </form>
 
-          <div className="mt-6 text-center space-y-2">
+          <div className="mt-6 text-center">
             <p className="text-xs text-gray-400">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-amber-600 hover:text-amber-700 font-medium">
-                Register
-              </Link>
-            </p>
-            <p className="text-xs text-gray-400">
-              Need help?{' '}
-              <Link to="/contact" className="text-amber-600 hover:text-amber-700 font-medium">
-                Contact us
+              Already have an account?{' '}
+              <Link to="/login" className="text-amber-600 hover:text-amber-700 font-medium">
+                Sign in
               </Link>
             </p>
           </div>
@@ -129,4 +144,4 @@ const LoginPage: React.FC = () => {
   )
 }
 
-export default LoginPage
+export default RegisterPage

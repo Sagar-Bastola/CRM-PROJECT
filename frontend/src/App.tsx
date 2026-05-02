@@ -10,6 +10,7 @@ import PricingPage from './pages/public/PricingPage'
 import AboutPage from './pages/public/AboutPage'
 import ContactPage from './pages/public/ContactPage'
 import LoginPage from './pages/public/LoginPage'
+import RegisterPage from './pages/public/RegisterPage'
 
 import DashboardPage from './pages/app/DashboardPage'
 import CompaniesPage from './pages/app/companies/CompaniesPage'
@@ -38,6 +39,7 @@ const App: React.FC = () => {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Route>
 
         {/* Protected Routes */}

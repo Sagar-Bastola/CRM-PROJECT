@@ -24,9 +24,8 @@ const EquipmentPage: React.FC = () => {
 
   const pmDueCount = equipment.filter(e => {
     if (!e.lastServiceDate) return false
-    const last = new Date(e.lastServiceDate)
-    const diff = (new Date().getTime() - last.getTime()) / (1000 * 60 * 60 * 24)
-    return diff > 180
+    const days = (new Date().getTime() - new Date(e.lastServiceDate).getTime()) / (1000 * 60 * 60 * 24)
+    return days > 180
   }).length
 
   const onSubmit = async (data: CreateEquipmentDto) => {

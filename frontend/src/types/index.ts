@@ -155,7 +155,7 @@ export interface CreateEquipmentDto {
   latitude?: number
 }
 
-export interface UpdateEquipmentDto extends Partial<Omit<CreateEquipmentDto, 'companyID'>> {}
+export interface UpdateEquipmentDto extends Partial<CreateEquipmentDto> {}
 
 // ── Lead ──────────────────────────────────────────────────
 export interface Lead {

@@ -1,24 +1,60 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Truck, Tag, Calendar, Hash, Trash2, Building2 } from 'lucide-react'
-import { useEquipmentById, useDeleteEquipment } from '../../../hooks/useEquipment'
+import { ArrowLeft, Truck, Tag, Calendar, Hash, Trash2, Building2, Edit, AlertTriangle } from 'lucide-react'
+import { useEquipmentById, useDeleteEquipment, useUpdateEquipment } from '../../../hooks/useEquipment'
+import { useCompanies } from '../../../hooks/useCompanies'
+import { useEquipmentCategories } from '../../../hooks/useEquipmentCategories'
+import { UpdateEquipmentDto } from '../../../types'
+import { useForm } from 'react-hook-form'
 import NotesPanel from '../../../components/shared/NotesPanel'
 import TasksPanel from '../../../components/shared/TasksPanel'
 import Button from '../../../components/ui/Button'
 import Badge from '../../../components/ui/Badge'
+import Modal from '../../../components/ui/Modal'
+import Input from '../../../components/ui/Input'
 import LoadingSpinner from '../../../components/shared/LoadingSpinner'
 
 const EquipmentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const equipmentId = Number(id)
+
   const { data: equipment, isLoading } = useEquipmentById(equipmentId)
+  const { data: companies = [] } = useCompanies()
+  const { data: categories = [] } = useEquipmentCategories()
   const deleteEquipment = useDeleteEquipment()
+  const updateEquipment = useUpdateEquipment()
+
   const [activeTab, setActiveTab] = useState<'notes' | 'tasks'>('notes')
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const editForm = useForm<UpdateEquipmentDto>()
+
+  const handleEditOpen = () => {
+    if (!equipment) return
+    editForm.reset({
+      name: equipment.name,
+      model: equipment.model ?? '',
+      serialNumber: equipment.serialNumber ?? '',
+      year: equipment.year,
+      lastServiceDate: equipment.lastServiceDate
+        ? new Date(equipment.lastServiceDate).toISOString().split('T')[0]
+        : '',
+      categoryID: equipment.categoryID,
+      companyID: equipment.companyID,
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdate = async (data: UpdateEquipmentDto) => {
+    await updateEquipment.mutateAsync({ id: equipmentId, data })
+    setShowEditModal(false)
+  }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this equipment record?')) return
     await deleteEquipment.mutateAsync(equipmentId)
+    setShowDeleteModal(false)
     navigate('/app/equipment')
   }
 
@@ -42,9 +78,14 @@ const EquipmentDetailPage: React.FC = () => {
           <h1 className="text-xl font-bold text-gray-900">{equipment.name}</h1>
           <p className="text-sm text-gray-500">{equipment.model} · {equipment.year}</p>
         </div>
-        <Button variant="danger" size="sm" onClick={handleDelete}>
-          <Trash2 size={14} /> Delete
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleEditOpen}>
+            <Edit size={14} /> Edit
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)}>
+            <Trash2 size={14} /> Delete
+          </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5">
@@ -107,6 +148,73 @@ const EquipmentDetailPage: React.FC = () => {
           {activeTab === 'tasks' && <TasksPanel recordType="Equipment" recordId={equipmentId} />}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Equipment"
+        size="lg"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button form="edit-equipment-form" type="submit" loading={updateEquipment.isPending}>Save Changes</Button>
+          </>
+        }
+      >
+        <form id="edit-equipment-form" onSubmit={editForm.handleSubmit(handleUpdate)} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Input label="Equipment Name *" error={editForm.formState.errors.name?.message} {...editForm.register('name', { required: 'Required' })} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-500" {...editForm.register('companyID', { valueAsNumber: true })}>
+                <option value="">Select company</option>
+                {companies.map(c => <option key={c.companyID} value={c.companyID}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-500" {...editForm.register('categoryID', { valueAsNumber: true })}>
+                <option value="">Select category</option>
+                {categories.map(c => <option key={c.categoryID} value={c.categoryID}>{c.name}</option>)}
+              </select>
+            </div>
+            <Input label="Model" {...editForm.register('model')} />
+            <Input label="Serial Number" {...editForm.register('serialNumber')} />
+            <Input label="Year" type="number" {...editForm.register('year', { valueAsNumber: true })} />
+            <div className="col-span-2">
+              <Input label="Last Service Date" type="date" {...editForm.register('lastServiceDate')} />
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Equipment"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete} loading={deleteEquipment.isPending}>Yes, Delete</Button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center text-center gap-4 py-2">
+          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle size={28} className="text-red-500" />
+          </div>
+          <div>
+            <p className="text-gray-800 font-semibold text-base">Are you sure you want to delete this equipment?</p>
+            <p className="text-gray-500 text-sm mt-1">
+              <span className="font-medium text-gray-700">{equipment.name}</span> will be permanently removed. This cannot be undone.
+            </p>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

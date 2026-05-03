@@ -12,6 +12,7 @@ const PublicLayout: React.FC = () => {
     { to: '/features', label: 'Features' },
     { to: '/pricing', label: 'Pricing' },
     { to: '/about', label: 'About' },
+    { to: '/equipment-listing', label: 'Equipment' },
     { to: '/contact', label: 'Contact' },
   ]
 
@@ -85,6 +86,7 @@ const PublicLayout: React.FC = () => {
           <div className="flex gap-4 text-xs">
             <Link to="/features" className="hover:text-white transition-colors">Features</Link>
             <Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+            <Link to="/equipment-listing" className="hover:text-white transition-colors">Equipment</Link>
             <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
         </div>

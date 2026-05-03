@@ -11,6 +11,7 @@ import AboutPage from './pages/public/AboutPage'
 import ContactPage from './pages/public/ContactPage'
 import LoginPage from './pages/public/LoginPage'
 import RegisterPage from './pages/public/RegisterPage'
+import EquipmentListingPage from './pages/public/EquipmentListingPage'
 
 import DashboardPage from './pages/app/DashboardPage'
 import CompaniesPage from './pages/app/companies/CompaniesPage'
@@ -31,7 +32,7 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
+        {/* Public Routes with shared navbar/layout */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/features" element={<FeaturesPage />} />
@@ -41,6 +42,9 @@ const App: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>
+
+        {/* Standalone - has its own navbar */}
+        <Route path="/equipment-listing" element={<EquipmentListingPage />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>

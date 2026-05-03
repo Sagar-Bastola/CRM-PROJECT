@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Phone, Globe, MapPin, Edit, Trash2, Building2, Plus } from 'lucide-react'
+import { ArrowLeft, Phone, Globe, MapPin, Edit, Trash2, Building2, Plus, AlertTriangle } from 'lucide-react'
 import { useCompany, useUpdateCompany, useDeleteCompany } from '../../../hooks/useCompanies'
 import { useContactsByCompany, useCreateContact } from '../../../hooks/useContacts'
 import { useEquipmentByCompany, useCreateEquipment } from '../../../hooks/useEquipment'
 import { useEquipmentCategories } from '../../../hooks/useEquipmentCategories'
 import { useBranches } from '../../../hooks/useBranches'
-import { CreateContactDto, CreateEquipmentDto } from '../../../types'
+import { CreateContactDto, CreateEquipmentDto, UpdateCompanyDto } from '../../../types'
 import { useForm } from 'react-hook-form'
 import NotesPanel from '../../../components/shared/NotesPanel'
 import TasksPanel from '../../../components/shared/TasksPanel'
@@ -29,20 +29,45 @@ const CompanyDetailPage: React.FC = () => {
   const { data: branches = [] } = useBranches()
 
   const deleteCompany = useDeleteCompany()
+  const updateCompany = useUpdateCompany()
   const createContact = useCreateContact()
   const createEquipment = useCreateEquipment()
-  const updateCompany = useUpdateCompany()
 
   const [showContactModal, setShowContactModal] = useState(false)
   const [showEquipmentModal, setShowEquipmentModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'contacts' | 'equipment' | 'notes' | 'tasks'>('contacts')
 
   const contactForm = useForm<CreateContactDto>()
   const equipmentForm = useForm<CreateEquipmentDto>()
+  const editForm = useForm<UpdateCompanyDto>()
+
+  const handleEditOpen = () => {
+    if (!company) return
+    editForm.reset({
+      name: company.name,
+      phone: company.phone ?? '',
+      website: company.website ?? '',
+      address1: company.address1 ?? '',
+      address2: company.address2 ?? '',
+      city: company.city ?? '',
+      state: company.state ?? '',
+      zip: company.zip ?? '',
+      country: company.country ?? '',
+      branchID: company.branchID,
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdate = async (data: UpdateCompanyDto) => {
+    await updateCompany.mutateAsync({ id: companyId, data })
+    setShowEditModal(false)
+  }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this company? This cannot be undone.')) return
     await deleteCompany.mutateAsync(companyId)
+    setShowDeleteModal(false)
     navigate('/app/companies')
   }
 
@@ -70,7 +95,6 @@ const CompanyDetailPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/app/companies')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
           <ArrowLeft size={18} className="text-gray-600" />
@@ -83,17 +107,16 @@ const CompanyDetailPage: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleEditOpen}>
             <Edit size={14} /> Edit
           </Button>
-          <Button variant="danger" size="sm" onClick={handleDelete} loading={deleteCompany.isPending}>
+          <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)}>
             <Trash2 size={14} /> Delete
           </Button>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5">
-        {/* Info Card */}
         <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-3">
           <h2 className="font-semibold text-gray-800 text-sm border-b border-gray-50 pb-2">Company Details</h2>
           {company.phone && (
@@ -124,7 +147,6 @@ const CompanyDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
             {tabs.map(tab => (
@@ -201,6 +223,70 @@ const CompanyDetailPage: React.FC = () => {
           {activeTab === 'tasks' && <TasksPanel recordType="Company" recordId={companyId} />}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Company"
+        size="lg"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button form="edit-company-form" type="submit" loading={updateCompany.isPending}>Save Changes</Button>
+          </>
+        }
+      >
+        <form id="edit-company-form" onSubmit={editForm.handleSubmit(handleUpdate)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Input label="Company Name *" error={editForm.formState.errors.name?.message} {...editForm.register('name', { required: 'Required' })} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-500" {...editForm.register('branchID', { valueAsNumber: true })}>
+                <option value="">Select branch</option>
+                {branches.map(b => <option key={b.branchID} value={b.branchID}>{b.name}</option>)}
+              </select>
+            </div>
+            <Input label="Phone" {...editForm.register('phone')} />
+            <Input label="Address" {...editForm.register('address1')} />
+            <Input label="Address 2" {...editForm.register('address2')} />
+            <Input label="City" {...editForm.register('city')} />
+            <Input label="State" {...editForm.register('state')} />
+            <Input label="ZIP" {...editForm.register('zip')} />
+            <Input label="Country" {...editForm.register('country')} />
+            <div className="col-span-2">
+              <Input label="Website" {...editForm.register('website')} />
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Company"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete} loading={deleteCompany.isPending}>Yes, Delete</Button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center text-center gap-4 py-2">
+          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle size={28} className="text-red-500" />
+          </div>
+          <div>
+            <p className="text-gray-800 font-semibold text-base">Are you sure you want to delete this company?</p>
+            <p className="text-gray-500 text-sm mt-1">
+              <span className="font-medium text-gray-700">{company.name}</span> and all associated data will be permanently removed. This cannot be undone.
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       {/* Contact Modal */}
       <Modal isOpen={showContactModal} onClose={() => setShowContactModal(false)} title="Add Contact"

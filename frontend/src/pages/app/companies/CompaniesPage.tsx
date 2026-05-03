@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Building2, Phone, MapPin } from 'lucide-react'
+import { Plus, Phone, MapPin } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useCompanies, useCreateCompany } from '../../../hooks/useCompanies'
 import { useBranches } from '../../../hooks/useBranches'

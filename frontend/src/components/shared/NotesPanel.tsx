@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Send, Trash2, FileText } from 'lucide-react'
-import { useNotesByRecord, useCreateNote, useDeleteNote } from '../../hooks/useNotes'
+import { Send, Trash2, FileText, Edit, Check, X } from 'lucide-react'
+import { useNotesByRecord, useCreateNote, useDeleteNote, useUpdateNote } from '../../hooks/useNotes'
 import { useAuthStore } from '../../store/authStore'
 import Avatar from '../ui/Avatar'
 import LoadingSpinner from './LoadingSpinner'
+import { Note } from '../../types'
 
 interface Props {
   recordType: string
@@ -12,9 +13,13 @@ interface Props {
 
 const NotesPanel: React.FC<Props> = ({ recordType, recordId }) => {
   const [text, setText] = useState('')
+  const [editingNote, setEditingNote] = useState<Note | null>(null)
+  const [editText, setEditText] = useState('')
+
   const { data: notes, isLoading } = useNotesByRecord(recordType, recordId)
   const createNote = useCreateNote()
   const deleteNote = useDeleteNote()
+  const updateNote = useUpdateNote()
   const user = useAuthStore(s => s.user)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,6 +27,23 @@ const NotesPanel: React.FC<Props> = ({ recordType, recordId }) => {
     if (!text.trim()) return
     await createNote.mutateAsync({ relatedRecordID: recordId, relatedRecordType: recordType, noteText: text })
     setText('')
+  }
+
+  const handleEditOpen = (note: Note) => {
+    setEditingNote(note)
+    setEditText(note.noteText)
+  }
+
+  const handleEditCancel = () => {
+    setEditingNote(null)
+    setEditText('')
+  }
+
+  const handleEditSave = async () => {
+    if (!editingNote || !editText.trim()) return
+    await updateNote.mutateAsync({ id: editingNote.noteID, data: { noteText: editText } })
+    setEditingNote(null)
+    setEditText('')
   }
 
   return (
@@ -70,15 +92,53 @@ const NotesPanel: React.FC<Props> = ({ recordType, recordId }) => {
                     <span className="text-xs text-gray-400">
                       {new Date(note.createdAt).toLocaleDateString()}
                     </span>
-                    <button
-                      onClick={() => deleteNote.mutate(note.noteID)}
-                      className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                    {editingNote?.noteID !== note.noteID && (
+                      <>
+                        <button
+                          onClick={() => handleEditOpen(note)}
+                          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-amber-500 transition-all"
+                        >
+                          <Edit size={12} />
+                        </button>
+                        <button
+                          onClick={() => deleteNote.mutate(note.noteID)}
+                          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed">{note.noteText}</p>
+
+                {editingNote?.noteID === note.noteID ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editText}
+                      onChange={e => setEditText(e.target.value)}
+                      rows={2}
+                      autoFocus
+                      className="w-full text-sm border border-amber-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleEditSave}
+                        disabled={!editText.trim() || updateNote.isPending}
+                        className="flex items-center gap-1 px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-lg disabled:opacity-50 transition-colors"
+                      >
+                        <Check size={11} /> Save
+                      </button>
+                      <button
+                        onClick={handleEditCancel}
+                        className="flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded-lg transition-colors"
+                      >
+                        <X size={11} /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600 leading-relaxed">{note.noteText}</p>
+                )}
               </div>
             </div>
           ))

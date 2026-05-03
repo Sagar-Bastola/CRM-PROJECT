@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Shield, Trash2, Edit } from 'lucide-react'
+import { Shield, Trash2, Edit, AlertTriangle } from 'lucide-react'
 import { useUsers, useUpdateUser, useDeleteUser } from '../../hooks/useUsers'
 import { UpdateUserDto, User } from '../../types'
 import { useForm } from 'react-hook-form'
@@ -15,6 +15,7 @@ const ROLES = ['Admin', 'User']
 
 const UsersPage: React.FC = () => {
   const [editUser, setEditUser] = useState<User | null>(null)
+  const [deleteUser_target, setDeleteUserTarget] = useState<User | null>(null)
   const { data: users = [], isLoading } = useUsers()
   const updateUser = useUpdateUser()
   const deleteUser = useDeleteUser()
@@ -32,6 +33,12 @@ const UsersPage: React.FC = () => {
     await updateUser.mutateAsync({ id: editUser.userID, data })
     setEditUser(null)
     reset()
+  }
+
+  const handleDelete = async () => {
+    if (!deleteUser_target) return
+    await deleteUser.mutateAsync(deleteUser_target.userID)
+    setDeleteUserTarget(null)
   }
 
   const columns: Column<User>[] = [
@@ -54,7 +61,7 @@ const UsersPage: React.FC = () => {
       render: (_, row) => (
         <div className="flex items-center gap-1">
           <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); openEdit(row) }}><Edit size={13} /></Button>
-          <Button size="sm" variant="danger" onClick={e => { e.stopPropagation(); deleteUser.mutate(row.userID) }}><Trash2 size={13} /></Button>
+          <Button size="sm" variant="danger" onClick={e => { e.stopPropagation(); setDeleteUserTarget(row) }}><Trash2 size={13} /></Button>
         </div>
       ),
     },
@@ -73,6 +80,7 @@ const UsersPage: React.FC = () => {
         emptyTitle="No users found"
       />
 
+      {/* Edit Modal */}
       <Modal isOpen={!!editUser} onClose={() => { setEditUser(null); reset() }} title="Edit User"
         footer={
           <>
@@ -92,6 +100,31 @@ const UsersPage: React.FC = () => {
           </div>
           <Input label="New Password (leave blank to keep)" type="password" placeholder="••••••••" {...register('password')} />
         </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteUser_target}
+        onClose={() => setDeleteUserTarget(null)}
+        title="Delete User"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDeleteUserTarget(null)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete} loading={deleteUser.isPending}>Yes, Delete</Button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center text-center gap-4 py-2">
+          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle size={28} className="text-red-500" />
+          </div>
+          <div>
+            <p className="text-gray-800 font-semibold text-base">Are you sure you want to delete this user?</p>
+            <p className="text-gray-500 text-sm mt-1">
+              <span className="font-medium text-gray-700">{deleteUser_target?.username}</span> will be permanently removed. This cannot be undone.
+            </p>
+          </div>
+        </div>
       </Modal>
     </div>
   )

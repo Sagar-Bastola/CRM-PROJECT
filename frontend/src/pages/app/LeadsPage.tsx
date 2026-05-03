@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Edit, Trash2, AlertTriangle } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead } from '../../hooks/useLeads'
 import { useCompanies } from '../../hooks/useCompanies'
@@ -18,6 +18,7 @@ const STATUSES = ['New', 'Qualified', 'Proposal', 'Rejected', 'Closed']
 const LeadsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false)
   const [editLead, setEditLead] = useState<Lead | null>(null)
+  const [deleteLead_target, setDeleteLeadTarget] = useState<Lead | null>(null)
 
   const { data: leads = [], isLoading } = useLeads()
   const { data: companies = [] } = useCompanies()
@@ -48,6 +49,12 @@ const LeadsPage: React.FC = () => {
     setShowModal(false)
   }
 
+  const handleDelete = async () => {
+    if (!deleteLead_target) return
+    await deleteLead.mutateAsync(deleteLead_target.leadID)
+    setDeleteLeadTarget(null)
+  }
+
   const stageCounts = STATUSES.map(s => ({ status: s, count: leads.filter(l => l.status === s).length }))
 
   const columns: Column<Lead>[] = [
@@ -72,8 +79,12 @@ const LeadsPage: React.FC = () => {
       key: 'actions', label: '',
       render: (_, row) => (
         <div className="flex items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); openEdit(row) }}>Edit</Button>
-          <Button size="sm" variant="danger" onClick={e => { e.stopPropagation(); deleteLead.mutate(row.leadID) }}>Del</Button>
+          <Button size="sm" variant="ghost" onClick={e => { e.stopPropagation(); openEdit(row) }}>
+            <Edit size={13} />
+          </Button>
+          <Button size="sm" variant="danger" onClick={e => { e.stopPropagation(); setDeleteLeadTarget(row) }}>
+            <Trash2 size={13} />
+          </Button>
         </div>
       ),
     },
@@ -87,7 +98,6 @@ const LeadsPage: React.FC = () => {
         action={<Button onClick={() => { setEditLead(null); reset(); setShowModal(true) }}><Plus size={16} /> New Lead</Button>}
       />
 
-      {/* Stage summary */}
       <div className="grid grid-cols-5 gap-3 mb-5">
         {stageCounts.map(s => (
           <div key={s.status} className="bg-white rounded-xl border border-gray-100 p-3 text-center">
@@ -108,7 +118,10 @@ const LeadsPage: React.FC = () => {
         emptyAction={{ label: '+ New Lead', onClick: () => setShowModal(true) }}
       />
 
-      <Modal isOpen={showModal} onClose={() => { setShowModal(false); reset(); setEditLead(null) }}
+      {/* Create / Edit Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => { setShowModal(false); reset(); setEditLead(null) }}
         title={editLead ? 'Edit Lead' : 'New Lead'}
         footer={
           <>
@@ -142,6 +155,31 @@ const LeadsPage: React.FC = () => {
             </select>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteLead_target}
+        onClose={() => setDeleteLeadTarget(null)}
+        title="Delete Lead"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDeleteLeadTarget(null)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete} loading={deleteLead.isPending}>Yes, Delete</Button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center text-center gap-4 py-2">
+          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle size={28} className="text-red-500" />
+          </div>
+          <div>
+            <p className="text-gray-800 font-semibold text-base">Are you sure you want to delete this lead?</p>
+            <p className="text-gray-500 text-sm mt-1">
+              <span className="font-medium text-gray-700">{deleteLead_target?.companyName}</span>'s lead will be permanently removed. This cannot be undone.
+            </p>
+          </div>
+        </div>
       </Modal>
     </div>
   )

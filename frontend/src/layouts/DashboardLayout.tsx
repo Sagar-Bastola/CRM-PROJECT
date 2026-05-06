@@ -1,6 +1,7 @@
 import React from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from '../components/shared/Sidebar'
+import Topbar from '../components/shared/Topbar'
 
 const pageTitles: Record<string, string> = {
   '/app': 'Dashboard',
@@ -24,6 +25,7 @@ const DashboardLayout: React.FC = () => {
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
+        <Topbar title={title} />
         <div className="flex-1 overflow-y-auto">
           <Outlet context={{ title }} />
         </div>

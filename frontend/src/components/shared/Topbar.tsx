@@ -2,6 +2,7 @@ import React from 'react'
 import { Bell } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useBranches } from '../../hooks/useBranches'
+import GlobalSearch from './GlobalSearch'
 
 interface Props {
   title: string
@@ -16,6 +17,7 @@ const Topbar: React.FC<Props> = ({ title, action }) => {
     <div className="h-14 bg-white border-b border-gray-100 px-6 flex items-center justify-between flex-shrink-0">
       <h1 className="text-lg font-bold text-gray-900">{title}</h1>
       <div className="flex items-center gap-3">
+        <GlobalSearch />
         {branches && branches.length > 0 && (
           <select className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 focus:outline-none focus:border-amber-500 bg-gray-50">
             <option value="">All Branches</option>

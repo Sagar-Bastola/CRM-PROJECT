@@ -18,6 +18,7 @@ public class CrmDbContext : DbContext
     public DbSet<Task> Tasks { get; set; }
     public DbSet<Lead> Leads { get; set; }
     public DbSet<Opportunity> Opportunities { get; set; }
+    public DbSet<ServiceRecord> ServiceRecords { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

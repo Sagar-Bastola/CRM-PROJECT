@@ -9,11 +9,9 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database
 builder.Services.AddDbContext<CrmDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// JWT
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
 var jwtAudience = builder.Configuration["Jwt:Audience"]!;
@@ -35,7 +33,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBranchService, BranchService>();
@@ -80,6 +77,21 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
     db.Database.EnsureCreated();
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ServiceRecords (
+            ServiceRecordID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            EquipmentID INTEGER NOT NULL,
+            ServiceType TEXT NOT NULL,
+            ServiceDate TEXT NOT NULL,
+            Description TEXT,
+            Cost TEXT,
+            TechnicianName TEXT,
+            NextServiceDate TEXT,
+            CreatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+            Deleted INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY (EquipmentID) REFERENCES Equipment(EquipmentID) ON DELETE CASCADE
+        );
+    ");
 }
 
 if (app.Environment.IsDevelopment())

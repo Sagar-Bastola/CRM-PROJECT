@@ -8,6 +8,7 @@ import { UpdateEquipmentDto } from '../../../types'
 import { useForm } from 'react-hook-form'
 import NotesPanel from '../../../components/shared/NotesPanel'
 import TasksPanel from '../../../components/shared/TasksPanel'
+import ServiceHistoryPanel from '../../../components/shared/ServiceHistoryPanel'
 import Button from '../../../components/ui/Button'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
@@ -25,7 +26,7 @@ const EquipmentDetailPage: React.FC = () => {
   const deleteEquipment = useDeleteEquipment()
   const updateEquipment = useUpdateEquipment()
 
-  const [activeTab, setActiveTab] = useState<'notes' | 'tasks'>('notes')
+  const [activeTab, setActiveTab] = useState<'notes' | 'tasks' | 'service'>('notes')
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
@@ -134,7 +135,7 @@ const EquipmentDetailPage: React.FC = () => {
 
         <div className="lg:col-span-2 space-y-4">
           <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
-            {['notes', 'tasks'].map(tab => (
+            {['notes', 'tasks', 'service'].map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab as any)}
                 className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all capitalize ${
                   activeTab === tab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
@@ -146,6 +147,7 @@ const EquipmentDetailPage: React.FC = () => {
           </div>
           {activeTab === 'notes' && <NotesPanel recordType="Equipment" recordId={equipmentId} />}
           {activeTab === 'tasks' && <TasksPanel recordType="Equipment" recordId={equipmentId} />}
+          {activeTab === 'service' && <ServiceHistoryPanel equipmentId={equipmentId} />}
         </div>
       </div>
 

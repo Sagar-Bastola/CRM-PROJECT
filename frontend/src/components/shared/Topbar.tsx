@@ -1,8 +1,8 @@
 import React from 'react'
-import { Bell } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useBranches } from '../../hooks/useBranches'
 import GlobalSearch from './GlobalSearch'
+import NotificationBell from './NotificationBell'
 
 interface Props {
   title: string
@@ -27,10 +27,7 @@ const Topbar: React.FC<Props> = ({ title, action }) => {
           </select>
         )}
         {action}
-        <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
-          <Bell size={18} />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-amber-500 rounded-full" />
-        </button>
+        <NotificationBell />
         <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
           {user?.username?.[0]?.toUpperCase()}
         </div>

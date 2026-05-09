@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Building2, Truck, TrendingUp, Layers, CheckSquare, AlertTriangle } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { useCompanies } from '../../hooks/useCompanies'
 import { useLeads } from '../../hooks/useLeads'
 import { useEquipment } from '../../hooks/useEquipment'
@@ -27,6 +28,19 @@ const DashboardPage: React.FC = () => {
   const overdueTasks = tasks?.filter(t => !t.isCompleted && t.dueDate && new Date(t.dueDate) < new Date()) || []
   const openTasks = tasks?.filter(t => !t.isCompleted) || []
 
+  const leadChartData = [
+    { name: 'New', count: leads?.filter(l => l.status === 'New').length || 0, color: '#3B82F6' },
+    { name: 'Qualified', count: leads?.filter(l => l.status === 'Qualified').length || 0, color: '#10B981' },
+    { name: 'Proposal', count: leads?.filter(l => l.status === 'Proposal').length || 0, color: '#F59E0B' },
+    { name: 'Rejected', count: leads?.filter(l => l.status === 'Rejected').length || 0, color: '#EF4444' },
+    { name: 'Closed', count: leads?.filter(l => l.status === 'Closed').length || 0, color: '#6B7280' },
+  ]
+
+  const oppChartData = openOpps.slice(0, 6).map(o => ({
+    name: o.name?.slice(0, 12) || 'Opp',
+    value: o.value || 0,
+  }))
+
   if (loadingC || loadingL || loadingE || loadingO) return <LoadingSpinner text="Loading dashboard..." />
 
   return (
@@ -52,6 +66,58 @@ const DashboardPage: React.FC = () => {
           icon={<Layers size={18} />} color="bg-purple-500" />
       </div>
 
+      {/* Charts Row */}
+      <div className="grid lg:grid-cols-2 gap-5 mb-5">
+        {/* Leads by Status */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <h2 className="font-semibold text-gray-800 text-sm mb-4">Leads by Status</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={leadChartData} barSize={36}>
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }}
+                cursor={{ fill: '#F9FAFB' }}
+              />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {leadChartData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Open Opportunities */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <h2 className="font-semibold text-gray-800 text-sm mb-4">Open Opportunities</h2>
+          {oppChartData.length === 0 ? (
+            <div className="h-[200px] flex items-center justify-center text-gray-400 text-sm">
+              No open opportunities
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={oppChartData} barSize={36}>
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={v => `$${(v / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }}
+                  formatter={(v: number) => [`$${v.toLocaleString()}`, 'Value']}
+                  cursor={{ fill: '#F9FAFB' }}
+                />
+                <Bar dataKey="value" fill="#F59E0B" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      {/* 3-column section */}
       <div className="grid lg:grid-cols-3 gap-5">
         {/* Recent Equipment */}
         <div className="bg-white rounded-xl border border-gray-100 lg:col-span-1">
@@ -83,11 +149,15 @@ const DashboardPage: React.FC = () => {
             <button onClick={() => navigate('/app/leads')} className="text-xs text-amber-500 hover:text-amber-700">View all →</button>
           </div>
 
-          {/* Stage counts */}
           <div className="grid grid-cols-4 gap-2 p-4 border-b border-gray-50">
             {['New', 'Qualified', 'Proposal', 'Closed'].map(stage => {
               const count = leads?.filter(l => l.status === stage).length || 0
-              const colors: Record<string, string> = { New: 'bg-blue-100 text-blue-700', Qualified: 'bg-green-100 text-green-700', Proposal: 'bg-amber-100 text-amber-700', Closed: 'bg-gray-100 text-gray-600' }
+              const colors: Record<string, string> = {
+                New: 'bg-blue-100 text-blue-700',
+                Qualified: 'bg-green-100 text-green-700',
+                Proposal: 'bg-amber-100 text-amber-700',
+                Closed: 'bg-gray-100 text-gray-600',
+              }
               return (
                 <div key={stage} className="text-center">
                   <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${colors[stage]}`}>{stage}</div>

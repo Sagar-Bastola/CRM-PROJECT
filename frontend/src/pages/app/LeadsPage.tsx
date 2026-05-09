@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Edit, Trash2, AlertTriangle } from 'lucide-react'
+import { Plus, Edit, Trash2, AlertTriangle, Download } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead } from '../../hooks/useLeads'
 import { useCompanies } from '../../hooks/useCompanies'
@@ -55,6 +55,30 @@ const LeadsPage: React.FC = () => {
     setDeleteLeadTarget(null)
   }
 
+  const exportToCSV = () => {
+    const headers = ['Company', 'Contact', 'Source', 'Status', 'Created By', 'Date']
+    const rows = leads.map(l => [
+      l.companyName ?? '',
+      l.contactName ?? '',
+      l.source ?? '',
+      l.status ?? '',
+      l.createdByUsername ?? '',
+      new Date(l.createdAt).toLocaleDateString(),
+    ])
+
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `leads_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const stageCounts = STATUSES.map(s => ({ status: s, count: leads.filter(l => l.status === s).length }))
 
   const columns: Column<Lead>[] = [
@@ -95,7 +119,16 @@ const LeadsPage: React.FC = () => {
       <PageHeader
         title="Leads"
         subtitle={`${leads.length} total leads`}
-        action={<Button onClick={() => { setEditLead(null); reset(); setShowModal(true) }}><Plus size={16} /> New Lead</Button>}
+        action={
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={exportToCSV} disabled={leads.length === 0}>
+              <Download size={16} /> Export CSV
+            </Button>
+            <Button onClick={() => { setEditLead(null); reset(); setShowModal(true) }}>
+              <Plus size={16} /> New Lead
+            </Button>
+          </div>
+        }
       />
 
       <div className="grid grid-cols-5 gap-3 mb-5">
@@ -118,7 +151,6 @@ const LeadsPage: React.FC = () => {
         emptyAction={{ label: '+ New Lead', onClick: () => setShowModal(true) }}
       />
 
-      {/* Create / Edit Modal */}
       <Modal
         isOpen={showModal}
         onClose={() => { setShowModal(false); reset(); setEditLead(null) }}
@@ -157,7 +189,6 @@ const LeadsPage: React.FC = () => {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={!!deleteLead_target}
         onClose={() => setDeleteLeadTarget(null)}

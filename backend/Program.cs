@@ -44,7 +44,7 @@ builder.Services.AddScoped<ILeadService, LeadsService>();
 builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<IOpportunityService, OpportunityService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
-
+builder.Services.AddHttpClient<IGroqService, GroqService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
